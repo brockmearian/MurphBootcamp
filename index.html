@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple To-Do List</title>
+    <title>My To-Do List</title>
     <style>
         * {
             margin: 0;
@@ -36,10 +36,220 @@
             text-align: center;
         }
 
-        .input-container {
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        /* Authentication Styles */
+        #authContainer {
+            display: none;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .auth-form input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .auth-buttons {
             display: flex;
             gap: 10px;
+        }
+
+        .auth-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+        }
+
+        .auth-toggle a {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+
+        /* App Styles */
+        #appContainer {
+            display: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 25px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .user-info {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Category Management */
+        .category-section {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .category-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .category-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .category-input-container input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .category-input-container input[type="color"] {
+            width: 50px;
+            height: 38px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .category-input-container button {
+            padding: 8px 16px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .category-input-container button:hover {
+            background: #45a049;
+        }
+
+        .category-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .category-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: white;
+        }
+
+        .category-tag button {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+            transition: background 0.3s;
+        }
+
+        .category-tag button:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Task Input */
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .task-input-row {
+            display: flex;
+            gap: 10px;
         }
 
         #taskInput {
@@ -56,6 +266,27 @@
             border-color: #667eea;
         }
 
+        .task-options-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        #categorySelect, #dueDateInput {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+        }
+
+        #categorySelect {
+            flex: 1;
+        }
+
+        #dueDateInput {
+            flex: 1;
+        }
+
         #addBtn {
             padding: 12px 24px;
             background: #667eea;
@@ -65,12 +296,14 @@
             font-size: 16px;
             cursor: pointer;
             transition: background 0.3s;
+            white-space: nowrap;
         }
 
         #addBtn:hover {
             background: #5568d3;
         }
 
+        /* Task List */
         #taskList {
             list-style: none;
         }
@@ -98,6 +331,10 @@
             color: #888;
         }
 
+        .task-item.overdue {
+            border-left: 4px solid #dc3545;
+        }
+
         .task-checkbox {
             width: 20px;
             height: 20px;
@@ -105,11 +342,45 @@
             cursor: pointer;
         }
 
-        .task-text {
+        .task-content {
             flex: 1;
+        }
+
+        .task-text {
             color: #333;
             font-size: 16px;
             word-break: break-word;
+            margin-bottom: 5px;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .task-category {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .task-due-date {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #f0f0f0;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .task-due-date.overdue {
+            background: #ffebee;
+            color: #dc3545;
+            font-weight: bold;
         }
 
         .delete-btn {
@@ -144,6 +415,65 @@
             font-size: 14px;
         }
 
+        /* Loading & Error States */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* Migration Banner */
+        .migration-banner {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .migration-banner button {
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #ffc107;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .migration-banner button:hover {
+            background: #ffb300;
+        }
+
+        .migration-banner .close-btn {
+            background: transparent;
+            color: #856404;
+            float: right;
+            padding: 0;
+            font-size: 20px;
+            line-height: 1;
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 20px;
@@ -153,49 +483,491 @@
                 font-size: 24px;
             }
 
-            .input-container {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .task-input-row {
                 flex-direction: column;
             }
 
             #addBtn {
                 width: 100%;
             }
+
+            .task-options-row {
+                flex-direction: column;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>My To-Do List</h1>
-
-        <div class="input-container">
-            <input type="text" id="taskInput" placeholder="Add a new task..." />
-            <button id="addBtn">Add</button>
+        <!-- Loading State -->
+        <div id="loadingContainer" class="loading">
+            <p>Loading...</p>
         </div>
 
-        <ul id="taskList"></ul>
+        <!-- Authentication Container -->
+        <div id="authContainer">
+            <h2>Welcome to My To-Do List</h2>
 
-        <div class="stats">
-            <span>Total: <strong id="totalTasks">0</strong></span>
-            <span>Completed: <strong id="completedTasks">0</strong></span>
+            <div id="errorMessage" style="display: none;" class="error"></div>
+
+            <!-- Sign In Form -->
+            <div id="signInForm" class="auth-form">
+                <input type="email" id="signInEmail" placeholder="Email" autocomplete="email" />
+                <input type="password" id="signInPassword" placeholder="Password" autocomplete="current-password" />
+                <div class="auth-buttons">
+                    <button class="btn-primary" id="signInBtn">Sign In</button>
+                </div>
+                <div class="auth-toggle">
+                    Don't have an account? <a id="showSignUp">Sign up</a>
+                </div>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="signUpForm" class="auth-form" style="display: none;">
+                <input type="email" id="signUpEmail" placeholder="Email" autocomplete="email" />
+                <input type="password" id="signUpPassword" placeholder="Password (min 6 characters)" autocomplete="new-password" />
+                <input type="password" id="signUpPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password" />
+                <div class="auth-buttons">
+                    <button class="btn-primary" id="signUpBtn">Sign Up</button>
+                </div>
+                <div class="auth-toggle">
+                    Already have an account? <a id="showSignIn">Sign in</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App Container -->
+        <div id="appContainer">
+            <div class="header">
+                <h1>My To-Do List</h1>
+                <button class="logout-btn" id="logoutBtn">Sign Out</button>
+            </div>
+
+            <div class="user-info">
+                Signed in as: <strong id="userEmail"></strong>
+            </div>
+
+            <div id="successMessage" style="display: none;" class="success"></div>
+            <div id="appErrorMessage" style="display: none;" class="error"></div>
+
+            <!-- Migration Banner -->
+            <div id="migrationBanner" style="display: none;" class="migration-banner">
+                <button class="close-btn" id="closeMigrationBanner">&times;</button>
+                <strong>Found existing tasks in browser storage!</strong>
+                <p>Would you like to import them to your account?</p>
+                <button id="migrateBtn">Import Tasks</button>
+            </div>
+
+            <!-- Category Management -->
+            <div class="category-section">
+                <h3>Categories</h3>
+                <div class="category-input-container">
+                    <input type="text" id="categoryNameInput" placeholder="New category name" maxlength="50" />
+                    <input type="color" id="categoryColorInput" value="#667eea" />
+                    <button id="addCategoryBtn">Add</button>
+                </div>
+                <div id="categoryList" class="category-list"></div>
+            </div>
+
+            <!-- Task Input -->
+            <div class="input-container">
+                <div class="task-input-row">
+                    <input type="text" id="taskInput" placeholder="Add a new task..." />
+                    <button id="addBtn">Add</button>
+                </div>
+                <div class="task-options-row">
+                    <select id="categorySelect">
+                        <option value="">No category</option>
+                    </select>
+                    <input type="date" id="dueDateInput" />
+                </div>
+            </div>
+
+            <!-- Task List -->
+            <ul id="taskList"></ul>
+
+            <!-- Stats -->
+            <div class="stats">
+                <span>Total: <strong id="totalTasks">0</strong></span>
+                <span>Completed: <strong id="completedTasks">0</strong></span>
+            </div>
         </div>
     </div>
 
-    <script>
-        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <script>
+        // =====================================================
+        // SUPABASE INITIALIZATION
+        // =====================================================
+
+        // IMPORTANT: Replace these with your actual Supabase credentials
+        // For production, use environment variables
+        const SUPABASE_URL = "https://ovyxgsqfgbffkdtejnui.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92eXhnc3FmZ2JmZmtkdGVqbnVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4ODkzNjYsImV4cCI6MjA3ODQ2NTM2Nn0.u7sF2FRocwwuwqwMnWqCfiS-yazKiZUhVsPvWUUmFP4";
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // =====================================================
+        // GLOBAL STATE
+        // =====================================================
+
+        let currentUser = null;
+        let tasks = [];
+        let categories = [];
+
+        // =====================================================
+        // DOM ELEMENTS
+        // =====================================================
+
+        const loadingContainer = document.getElementById('loadingContainer');
+        const authContainer = document.getElementById('authContainer');
+        const appContainer = document.getElementById('appContainer');
+
+        // Auth elements
+        const signInForm = document.getElementById('signInForm');
+        const signUpForm = document.getElementById('signUpForm');
+        const signInEmail = document.getElementById('signInEmail');
+        const signInPassword = document.getElementById('signInPassword');
+        const signUpEmail = document.getElementById('signUpEmail');
+        const signUpPassword = document.getElementById('signUpPassword');
+        const signUpPasswordConfirm = document.getElementById('signUpPasswordConfirm');
+        const signInBtn = document.getElementById('signInBtn');
+        const signUpBtn = document.getElementById('signUpBtn');
+        const showSignUp = document.getElementById('showSignUp');
+        const showSignIn = document.getElementById('showSignIn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const userEmail = document.getElementById('userEmail');
+
+        // App elements
+        const successMessage = document.getElementById('successMessage');
+        const appErrorMessage = document.getElementById('appErrorMessage');
+        const migrationBanner = document.getElementById('migrationBanner');
+        const closeMigrationBanner = document.getElementById('closeMigrationBanner');
+        const migrateBtn = document.getElementById('migrateBtn');
+
+        // Category elements
+        const categoryNameInput = document.getElementById('categoryNameInput');
+        const categoryColorInput = document.getElementById('categoryColorInput');
+        const addCategoryBtn = document.getElementById('addCategoryBtn');
+        const categoryList = document.getElementById('categoryList');
+        const categorySelect = document.getElementById('categorySelect');
+
+        // Task elements
         const taskInput = document.getElementById('taskInput');
+        const dueDateInput = document.getElementById('dueDateInput');
         const addBtn = document.getElementById('addBtn');
         const taskList = document.getElementById('taskList');
         const totalTasksEl = document.getElementById('totalTasks');
         const completedTasksEl = document.getElementById('completedTasks');
 
-        function saveTasks() {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
+        // =====================================================
+        // AUTHENTICATION
+        // =====================================================
+
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session) {
+                currentUser = session.user;
+                showApp();
+                await loadAppData();
+                checkForLocalStorageMigration();
+            } else {
+                showAuth();
+            }
         }
 
-        function updateStats() {
-            totalTasksEl.textContent = tasks.length;
-            completedTasksEl.textContent = tasks.filter(t => t.completed).length;
+        async function signIn(email, password) {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                showError(error.message);
+            } else {
+                currentUser = data.user;
+                showApp();
+                await loadAppData();
+                checkForLocalStorageMigration();
+            }
+        }
+
+        async function signUp(email, password, passwordConfirm) {
+            if (password !== passwordConfirm) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                showError(error.message);
+            } else {
+                showError('Account created! Please check your email for confirmation.', 'success');
+                // Auto sign in if email confirmation is disabled
+                if (data.session) {
+                    currentUser = data.user;
+                    showApp();
+                    await loadAppData();
+                    await createDefaultCategories();
+                }
+            }
+        }
+
+        async function signOut() {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                showAppError(error.message);
+            } else {
+                currentUser = null;
+                tasks = [];
+                categories = [];
+                showAuth();
+            }
+        }
+
+        // Listen for auth state changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                currentUser = session.user;
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                tasks = [];
+                categories = [];
+            }
+        });
+
+        // =====================================================
+        // CATEGORIES
+        // =====================================================
+
+        async function loadCategories() {
+            const { data, error } = await supabase
+                .from('categories')
+                .select('*')
+                .order('name', { ascending: true });
+
+            if (error) {
+                console.error('Error loading categories:', error);
+                showAppError('Failed to load categories');
+                return;
+            }
+
+            categories = data || [];
+            renderCategories();
+            updateCategorySelect();
+        }
+
+        async function createCategory(name, color) {
+            if (!name.trim()) {
+                showAppError('Category name cannot be empty');
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('categories')
+                .insert([{ name: name.trim(), color: color }])
+                .select();
+
+            if (error) {
+                if (error.code === '23505') { // Unique constraint violation
+                    showAppError('Category with this name already exists');
+                } else {
+                    console.error('Error creating category:', error);
+                    showAppError('Failed to create category');
+                }
+                return;
+            }
+
+            categories.push(data[0]);
+            renderCategories();
+            updateCategorySelect();
+            categoryNameInput.value = '';
+            showSuccess('Category created!');
+        }
+
+        async function deleteCategory(categoryId) {
+            if (!confirm('Delete this category? Tasks will not be deleted, just uncategorized.')) {
+                return;
+            }
+
+            const { error } = await supabase
+                .from('categories')
+                .delete()
+                .eq('id', categoryId);
+
+            if (error) {
+                console.error('Error deleting category:', error);
+                showAppError('Failed to delete category');
+                return;
+            }
+
+            categories = categories.filter(c => c.id !== categoryId);
+            renderCategories();
+            updateCategorySelect();
+            // Reload tasks to update their category display
+            await loadTasks();
+            showSuccess('Category deleted!');
+        }
+
+        function renderCategories() {
+            categoryList.innerHTML = '';
+
+            if (categories.length === 0) {
+                categoryList.innerHTML = '<p style="color: #888; font-size: 14px;">No categories yet</p>';
+                return;
+            }
+
+            categories.forEach(category => {
+                const tag = document.createElement('div');
+                tag.className = 'category-tag';
+                tag.style.backgroundColor = category.color || '#667eea';
+                tag.innerHTML = `
+                    ${escapeHtml(category.name)}
+                    <button onclick="deleteCategory('${category.id}')" title="Delete category">&times;</button>
+                `;
+                categoryList.appendChild(tag);
+            });
+        }
+
+        function updateCategorySelect() {
+            const currentValue = categorySelect.value;
+            categorySelect.innerHTML = '<option value="">No category</option>';
+
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            });
+
+            // Restore previous selection if it still exists
+            if (currentValue && categories.find(c => c.id === currentValue)) {
+                categorySelect.value = currentValue;
+            }
+        }
+
+        async function createDefaultCategories() {
+            const defaults = [
+                { name: 'Personal', color: '#667eea' },
+                { name: 'Work', color: '#4caf50' },
+                { name: 'Shopping', color: '#ff9800' }
+            ];
+
+            for (const cat of defaults) {
+                await createCategory(cat.name, cat.color);
+            }
+        }
+
+        // =====================================================
+        // TASKS
+        // =====================================================
+
+        async function loadTasks() {
+            const { data, error } = await supabase
+                .from('tasks')
+                .select(`
+                    *,
+                    category:categories(id, name, color)
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading tasks:', error);
+                showAppError('Failed to load tasks');
+                return;
+            }
+
+            tasks = data || [];
+            renderTasks();
+        }
+
+        async function createTask(title, dueDate = null, categoryId = null) {
+            if (!title.trim()) {
+                showAppError('Task cannot be empty');
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('tasks')
+                .insert([{
+                    title: title.trim(),
+                    due_date: dueDate || null,
+                    category_id: categoryId || null,
+                    completed: false
+                }])
+                .select(`
+                    *,
+                    category:categories(id, name, color)
+                `);
+
+            if (error) {
+                console.error('Error creating task:', error);
+                showAppError('Failed to create task');
+                return;
+            }
+
+            tasks.unshift(data[0]);
+            renderTasks();
+            taskInput.value = '';
+            dueDateInput.value = '';
+            categorySelect.value = '';
+        }
+
+        async function toggleTaskCompletion(taskId, completed) {
+            const { error } = await supabase
+                .from('tasks')
+                .update({ completed: completed })
+                .eq('id', taskId);
+
+            if (error) {
+                console.error('Error updating task:', error);
+                showAppError('Failed to update task');
+                return;
+            }
+
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.completed = completed;
+                renderTasks();
+            }
+        }
+
+        async function deleteTask(taskId) {
+            const { error } = await supabase
+                .from('tasks')
+                .delete()
+                .eq('id', taskId);
+
+            if (error) {
+                console.error('Error deleting task:', error);
+                showAppError('Failed to delete task');
+                return;
+            }
+
+            tasks = tasks.filter(t => t.id !== taskId);
+            renderTasks();
         }
 
         function renderTasks() {
@@ -204,14 +976,34 @@
             if (tasks.length === 0) {
                 taskList.innerHTML = '<div class="empty-state">No tasks yet. Add one above!</div>';
             } else {
-                tasks.forEach((task, index) => {
+                const today = new Date().toISOString().split('T')[0];
+
+                tasks.forEach(task => {
                     const li = document.createElement('li');
                     li.className = `task-item ${task.completed ? 'completed' : ''}`;
 
+                    // Check if overdue
+                    const isOverdue = task.due_date && !task.completed && task.due_date < today;
+                    if (isOverdue) {
+                        li.classList.add('overdue');
+                    }
+
+                    const categoryHtml = task.category ?
+                        `<span class="task-category" style="background-color: ${task.category.color}">${escapeHtml(task.category.name)}</span>` : '';
+
+                    const dueDateHtml = task.due_date ?
+                        `<span class="task-due-date ${isOverdue ? 'overdue' : ''}">Due: ${formatDate(task.due_date)}</span>` : '';
+
                     li.innerHTML = `
-                        <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-index="${index}">
-                        <span class="task-text">${escapeHtml(task.text)}</span>
-                        <button class="delete-btn" data-index="${index}">Delete</button>
+                        <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}">
+                        <div class="task-content">
+                            <div class="task-text">${escapeHtml(task.title)}</div>
+                            <div class="task-meta">
+                                ${categoryHtml}
+                                ${dueDateHtml}
+                            </div>
+                        </div>
+                        <button class="delete-btn" data-id="${task.id}">Delete</button>
                     `;
 
                     taskList.appendChild(li);
@@ -221,55 +1013,231 @@
             updateStats();
         }
 
+        function updateStats() {
+            totalTasksEl.textContent = tasks.length;
+            completedTasksEl.textContent = tasks.filter(t => t.completed).length;
+        }
+
+        // =====================================================
+        // MIGRATION FROM LOCALSTORAGE
+        // =====================================================
+
+        function checkForLocalStorageMigration() {
+            const localTasks = localStorage.getItem('tasks');
+            if (localTasks) {
+                const tasksArray = JSON.parse(localTasks);
+                if (tasksArray.length > 0) {
+                    migrationBanner.style.display = 'block';
+                }
+            }
+        }
+
+        async function migrateLocalStorageData() {
+            const localTasks = localStorage.getItem('tasks');
+            if (!localTasks) return;
+
+            const tasksArray = JSON.parse(localTasks);
+            if (tasksArray.length === 0) return;
+
+            migrationBanner.style.display = 'none';
+
+            // Create "Imported" category
+            let importedCategory = categories.find(c => c.name === 'Imported');
+            if (!importedCategory) {
+                const { data, error } = await supabase
+                    .from('categories')
+                    .insert([{ name: 'Imported', color: '#9e9e9e' }])
+                    .select();
+
+                if (data && data.length > 0) {
+                    importedCategory = data[0];
+                    categories.push(importedCategory);
+                    updateCategorySelect();
+                }
+            }
+
+            // Migrate tasks
+            const migratedTasks = tasksArray.map(task => ({
+                title: task.text,
+                completed: task.completed || false,
+                category_id: importedCategory ? importedCategory.id : null
+            }));
+
+            const { data, error } = await supabase
+                .from('tasks')
+                .insert(migratedTasks);
+
+            if (error) {
+                console.error('Migration error:', error);
+                showAppError('Failed to import tasks. Please try again.');
+                return;
+            }
+
+            // Clear localStorage
+            localStorage.removeItem('tasks');
+
+            showSuccess(`Successfully imported ${tasksArray.length} tasks!`);
+            await loadTasks();
+        }
+
+        // =====================================================
+        // UTILITY FUNCTIONS
+        // =====================================================
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        function addTask() {
-            const text = taskInput.value.trim();
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
 
-            if (text === '') {
-                alert('Please enter a task!');
-                return;
+            if (dateString === today.toISOString().split('T')[0]) {
+                return 'Today';
+            } else if (dateString === tomorrow.toISOString().split('T')[0]) {
+                return 'Tomorrow';
+            } else {
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             }
-
-            tasks.push({
-                text: text,
-                completed: false
-            });
-
-            taskInput.value = '';
-            saveTasks();
-            renderTasks();
         }
 
-        addBtn.addEventListener('click', addTask);
+        function showError(message, type = 'error') {
+            errorMessage.textContent = message;
+            errorMessage.className = type;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showAppError(message) {
+            appErrorMessage.textContent = message;
+            appErrorMessage.style.display = 'block';
+            setTimeout(() => {
+                appErrorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        function showAuth() {
+            loadingContainer.style.display = 'none';
+            authContainer.style.display = 'block';
+            appContainer.style.display = 'none';
+        }
+
+        function showApp() {
+            loadingContainer.style.display = 'none';
+            authContainer.style.display = 'none';
+            appContainer.style.display = 'block';
+
+            if (currentUser) {
+                userEmail.textContent = currentUser.email;
+            }
+        }
+
+        async function loadAppData() {
+            await loadCategories();
+            await loadTasks();
+        }
+
+        // =====================================================
+        // EVENT LISTENERS
+        // =====================================================
+
+        // Auth toggle
+        showSignUp.addEventListener('click', () => {
+            signInForm.style.display = 'none';
+            signUpForm.style.display = 'block';
+            errorMessage.style.display = 'none';
+        });
+
+        showSignIn.addEventListener('click', () => {
+            signUpForm.style.display = 'none';
+            signInForm.style.display = 'block';
+            errorMessage.style.display = 'none';
+        });
+
+        // Sign in
+        signInBtn.addEventListener('click', () => {
+            signIn(signInEmail.value, signInPassword.value);
+        });
+
+        signInPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                signIn(signInEmail.value, signInPassword.value);
+            }
+        });
+
+        // Sign up
+        signUpBtn.addEventListener('click', () => {
+            signUp(signUpEmail.value, signUpPassword.value, signUpPasswordConfirm.value);
+        });
+
+        signUpPasswordConfirm.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                signUp(signUpEmail.value, signUpPassword.value, signUpPasswordConfirm.value);
+            }
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', signOut);
+
+        // Categories
+        addCategoryBtn.addEventListener('click', () => {
+            createCategory(categoryNameInput.value, categoryColorInput.value);
+        });
+
+        categoryNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                createCategory(categoryNameInput.value, categoryColorInput.value);
+            }
+        });
+
+        // Tasks
+        addBtn.addEventListener('click', () => {
+            createTask(taskInput.value, dueDateInput.value, categorySelect.value);
+        });
 
         taskInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                addTask();
+                createTask(taskInput.value, dueDateInput.value, categorySelect.value);
             }
         });
 
         taskList.addEventListener('click', (e) => {
             if (e.target.classList.contains('task-checkbox')) {
-                const index = parseInt(e.target.dataset.index);
-                tasks[index].completed = e.target.checked;
-                saveTasks();
-                renderTasks();
+                const taskId = e.target.dataset.id;
+                toggleTaskCompletion(taskId, e.target.checked);
             }
 
             if (e.target.classList.contains('delete-btn')) {
-                const index = parseInt(e.target.dataset.index);
-                tasks.splice(index, 1);
-                saveTasks();
-                renderTasks();
+                const taskId = e.target.dataset.id;
+                deleteTask(taskId);
             }
         });
 
-        renderTasks();
+        // Migration
+        migrateBtn.addEventListener('click', migrateLocalStorageData);
+        closeMigrationBanner.addEventListener('click', () => {
+            migrationBanner.style.display = 'none';
+        });
+
+        // =====================================================
+        // INITIALIZE APP
+        // =====================================================
+
+        checkAuth();
     </script>
 </body>
 </html>
