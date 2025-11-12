@@ -284,7 +284,7 @@
             gap: 10px;
         }
 
-        #categorySelect, #dueDateTimeInput {
+        #categorySelect, #dueDateInput, #dueTimeInput {
             padding: 10px;
             border: 2px solid #e0e0e0;
             border-radius: 5px;
@@ -296,8 +296,12 @@
             flex: 1;
         }
 
-        #dueDateTimeInput {
+        #dueDateInput {
             flex: 1;
+        }
+
+        #dueTimeInput {
+            flex: 0.7;
         }
 
         #addBtn {
@@ -683,8 +687,18 @@
                     <select id="categorySelect">
                         <option value="">No category</option>
                     </select>
-                    <input type="datetime-local" id="dueDateTimeInput" />
+                    <input type="date" id="dueDateInput" placeholder="Due date" />
+                    <input type="time" id="dueTimeInput" placeholder="Time (optional)" />
                 </div>
+            </div>
+
+            <!-- Category Filter -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; color: #333;">Filter Tasks:</label>
+                <select id="categoryFilter" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 14px; background: white;">
+                    <option value="all">All Categories</option>
+                    <option value="today">Today</option>
+                </select>
             </div>
 
             <!-- Task List -->
@@ -739,6 +753,7 @@
         let categories = [];
         let editingTaskId = null;
         let editingCategoryId = null;
+        let currentFilter = 'all';
 
         // =====================================================
         // DOM ELEMENTS
@@ -780,8 +795,10 @@
 
         // Task elements
         const taskInput = document.getElementById('taskInput');
-        const dueDateTimeInput = document.getElementById('dueDateTimeInput');
+        const dueDateInput = document.getElementById('dueDateInput');
+        const dueTimeInput = document.getElementById('dueTimeInput');
         const addBtn = document.getElementById('addBtn');
+        const categoryFilter = document.getElementById('categoryFilter');
         const taskList = document.getElementById('taskList');
         const totalTasksEl = document.getElementById('totalTasks');
         const completedTasksEl = document.getElementById('completedTasks');
@@ -1025,14 +1042,14 @@
                     `;
                     categoryList.appendChild(editDiv);
                 } else {
-                    // Normal view
+                    // Normal view - clickable tag with delete button
                     const tag = document.createElement('div');
                     tag.className = 'category-tag';
                     tag.style.backgroundColor = category.color || '#667eea';
+                    tag.style.cursor = 'pointer';
                     tag.innerHTML = `
-                        ${escapeHtml(category.name)}
-                        <button onclick="startEditingCategory('${category.id}')" title="Edit color">Edit</button>
-                        <button class="delete-category-btn" onclick="deleteCategory('${category.id}')" title="Delete category">&times;</button>
+                        <span onclick="startEditingCategory('${category.id}')" style="flex: 1;">${escapeHtml(category.name)}</span>
+                        <button class="delete-category-btn" onclick="event.stopPropagation(); deleteCategory('${category.id}')" title="Delete category">&times;</button>
                     `;
                     categoryList.appendChild(tag);
                 }
@@ -1052,6 +1069,25 @@
 
             if (currentValue && categories.find(c => c.id === currentValue)) {
                 categorySelect.value = currentValue;
+            }
+
+            // Also update the category filter dropdown
+            updateCategoryFilter();
+        }
+
+        function updateCategoryFilter() {
+            const currentValue = categoryFilter.value;
+            categoryFilter.innerHTML = '<option value="all">All Categories</option><option value="today">Today</option>';
+
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                categoryFilter.appendChild(option);
+            });
+
+            if (currentValue && (currentValue === 'all' || currentValue === 'today' || categories.find(c => c.id === currentValue))) {
+                categoryFilter.value = currentValue;
             }
         }
 
@@ -1090,21 +1126,30 @@
             renderTasks();
         }
 
-        async function createTask(title, dueDateTime = null, categoryId = null) {
+        async function createTask(title, dueDate = null, dueTime = null, categoryId = null) {
             if (!title.trim()) {
                 showAppError('Task cannot be empty');
                 return;
             }
 
+            // Combine date and time if both provided, otherwise use just date
+            let dueDateTimeValue = null;
+            if (dueDate && dueDate.trim() !== '') {
+                if (dueTime && dueTime.trim() !== '') {
+                    dueDateTimeValue = `${dueDate}T${dueTime}`;
+                } else {
+                    dueDateTimeValue = `${dueDate}T00:00`;
+                }
+            }
+
             // Convert empty strings to null for proper database handling
-            const cleanDueDateTime = dueDateTime && dueDateTime.trim() !== '' ? dueDateTime : null;
             const cleanCategoryId = categoryId && categoryId.trim() !== '' ? categoryId : null;
 
             const { data, error } = await supabase
                 .from('tasks')
                 .insert([{
                     title: title.trim(),
-                    due_datetime: cleanDueDateTime,
+                    due_datetime: dueDateTimeValue,
                     category_id: cleanCategoryId,
                     completed: false,
                     user_id: currentUser.id
@@ -1116,14 +1161,16 @@
 
             if (error) {
                 console.error('Error creating task:', error);
-                showAppError('Failed to create task');
+                console.error('Error details:', JSON.stringify(error, null, 2));
+                showAppError(`Failed to create task: ${error.message || error.code || 'Unknown error'}`);
                 return;
             }
 
             tasks.unshift(data[0]);
             renderTasks();
             taskInput.value = '';
-            dueDateTimeInput.value = '';
+            dueDateInput.value = '';
+            dueTimeInput.value = '';
             categorySelect.value = '';
         }
 
@@ -1169,20 +1216,29 @@
             renderTasks();
         }
 
-        async function saveTaskEdit(taskId, title, categoryId, dueDateTime) {
+        async function saveTaskEdit(taskId, title, categoryId, dueDate, dueTime) {
             if (!title.trim()) {
                 showAppError('Task title cannot be empty');
                 return;
             }
 
+            // Combine date and time if both provided, otherwise use just date
+            let dueDateTimeValue = null;
+            if (dueDate && dueDate.trim() !== '') {
+                if (dueTime && dueTime.trim() !== '') {
+                    dueDateTimeValue = `${dueDate}T${dueTime}`;
+                } else {
+                    dueDateTimeValue = `${dueDate}T00:00`;
+                }
+            }
+
             // Convert empty strings to null for proper database handling
             const cleanCategoryId = categoryId && categoryId.trim() !== '' ? categoryId : null;
-            const cleanDueDateTime = dueDateTime && dueDateTime.trim() !== '' ? dueDateTime : null;
 
             const success = await updateTask(taskId, {
                 title: title.trim(),
                 category_id: cleanCategoryId,
-                due_datetime: cleanDueDateTime
+                due_datetime: dueDateTimeValue
             });
 
             if (success) {
@@ -1200,12 +1256,33 @@
         function renderTasks() {
             taskList.innerHTML = '';
 
-            if (tasks.length === 0) {
-                taskList.innerHTML = '<div class="empty-state">No tasks yet. Add one above!</div>';
-            } else {
-                const now = new Date();
+            // Filter tasks based on currentFilter
+            let filteredTasks = tasks;
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
 
-                tasks.forEach(task => {
+            if (currentFilter === 'today') {
+                // Show tasks due today
+                filteredTasks = tasks.filter(task => {
+                    if (!task.due_datetime) return false;
+                    const taskDate = new Date(task.due_datetime);
+                    const taskDay = new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate());
+                    return taskDay.getTime() === today.getTime();
+                });
+            } else if (currentFilter !== 'all') {
+                // Filter by specific category
+                filteredTasks = tasks.filter(task => task.category_id === currentFilter);
+            }
+
+            if (filteredTasks.length === 0) {
+                const emptyMessage = currentFilter === 'today' ? 'No tasks due today!' :
+                                    currentFilter === 'all' ? 'No tasks yet. Add one above!' :
+                                    'No tasks in this category!';
+                taskList.innerHTML = `<div class="empty-state">${emptyMessage}</div>`;
+            } else {
+                filteredTasks.forEach(task => {
                     const li = document.createElement('li');
                     li.className = `task-item ${task.completed ? 'completed' : ''}`;
 
@@ -1221,6 +1298,9 @@
 
                     if (task.id === editingTaskId) {
                         // Edit mode
+                        const dateValue = task.due_datetime ? extractDate(task.due_datetime) : '';
+                        const timeValue = task.due_datetime ? extractTime(task.due_datetime) : '';
+
                         li.innerHTML = `
                             <div class="edit-form">
                                 <input type="text" value="${escapeHtml(task.title)}" id="edit-title-${task.id}">
@@ -1232,8 +1312,10 @@
                                         </option>
                                     `).join('')}
                                 </select>
-                                <input type="datetime-local" id="edit-datetime-${task.id}"
-                                       value="${task.due_datetime ? formatDateTimeForInput(task.due_datetime) : ''}">
+                                <div style="display: flex; gap: 5px;">
+                                    <input type="date" id="edit-date-${task.id}" value="${dateValue}" style="flex: 1;">
+                                    <input type="time" id="edit-time-${task.id}" value="${timeValue}" placeholder="Time (optional)" style="flex: 0.7;">
+                                </div>
                                 <div class="edit-actions">
                                     <button class="save-btn" onclick="saveEdit('${task.id}')">Save</button>
                                     <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
@@ -1362,8 +1444,18 @@
                 dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             }
 
-            const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            return `${dateStr} at ${timeStr}`;
+            // Check if time is midnight (00:00) - means no specific time was set
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+
+            if (hours === 0 && minutes === 0) {
+                // Date only, no time
+                return dateStr;
+            } else {
+                // Date with time
+                const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                return `${dateStr} at ${timeStr}`;
+            }
         }
 
         function formatDateTimeForInput(dateTimeString) {
@@ -1374,6 +1466,29 @@
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
             return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        function extractDate(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function extractTime(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const hours = date.getHours();
+            const minutes = date.getMinutes();
+
+            // If midnight (00:00), return empty string (no time set)
+            if (hours === 0 && minutes === 0) {
+                return '';
+            }
+
+            const hoursStr = String(hours).padStart(2, '0');
+            const minutesStr = String(minutes).padStart(2, '0');
+            return `${hoursStr}:${minutesStr}`;
         }
 
         function showError(message, type = 'error') {
@@ -1434,8 +1549,9 @@
         window.saveEdit = function(taskId) {
             const title = document.getElementById(`edit-title-${taskId}`).value;
             const categoryId = document.getElementById(`edit-category-${taskId}`).value;
-            const dueDateTime = document.getElementById(`edit-datetime-${taskId}`).value;
-            saveTaskEdit(taskId, title, categoryId, dueDateTime);
+            const dueDate = document.getElementById(`edit-date-${taskId}`).value;
+            const dueTime = document.getElementById(`edit-time-${taskId}`).value;
+            saveTaskEdit(taskId, title, categoryId, dueDate, dueTime);
         };
         window.cancelEdit = cancelEdit;
 
@@ -1494,13 +1610,19 @@
 
         // Tasks
         addBtn.addEventListener('click', () => {
-            createTask(taskInput.value, dueDateTimeInput.value, categorySelect.value);
+            createTask(taskInput.value, dueDateInput.value, dueTimeInput.value, categorySelect.value);
         });
 
         taskInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                createTask(taskInput.value, dueDateTimeInput.value, categorySelect.value);
+                createTask(taskInput.value, dueDateInput.value, dueTimeInput.value, categorySelect.value);
             }
+        });
+
+        // Category filter
+        categoryFilter.addEventListener('change', () => {
+            currentFilter = categoryFilter.value;
+            renderTasks();
         });
 
         taskList.addEventListener('click', (e) => {
