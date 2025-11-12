@@ -189,31 +189,12 @@
             font-size: 14px;
         }
 
-        /* Color Palette Grid */
-        .color-palette {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .color-box {
-            width: 100%;
-            aspect-ratio: 1;
+        .category-input-container select {
+            padding: 8px;
+            border: 2px solid #e0e0e0;
             border-radius: 5px;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .color-box:hover {
-            transform: scale(1.1);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        .color-box.selected {
-            border-color: #333;
-            transform: scale(1.05);
+            font-size: 14px;
+            background: white;
         }
 
         .category-add-btn {
@@ -251,17 +232,24 @@
             background: rgba(255, 255, 255, 0.3);
             border: none;
             color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
+            border-radius: 3px;
+            padding: 2px 6px;
             cursor: pointer;
-            font-size: 12px;
-            line-height: 1;
+            font-size: 11px;
+            line-height: 1.2;
             transition: background 0.3s;
         }
 
         .category-tag button:hover {
             background: rgba(255, 255, 255, 0.5);
+        }
+
+        .category-tag .delete-category-btn {
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            padding: 0;
+            font-size: 12px;
         }
 
         /* Task Input */
@@ -605,8 +593,8 @@
                 flex-direction: column;
             }
 
-            .color-palette {
-                grid-template-columns: repeat(4, 1fr);
+            .category-name-row {
+                flex-direction: column;
             }
         }
     </style>
@@ -678,9 +666,9 @@
                 <div class="category-input-container">
                     <div class="category-name-row">
                         <input type="text" id="categoryNameInput" placeholder="New category name" maxlength="50" />
+                        <select id="categoryColorSelect"></select>
                         <button class="category-add-btn" id="addCategoryBtn">Add</button>
                     </div>
-                    <div class="color-palette" id="colorPalette"></div>
                 </div>
                 <div id="categoryList" class="category-list"></div>
             </div>
@@ -749,8 +737,8 @@
         let currentUser = null;
         let tasks = [];
         let categories = [];
-        let selectedColor = COLOR_PALETTE[0].value;
         let editingTaskId = null;
+        let editingCategoryId = null;
 
         // =====================================================
         // DOM ELEMENTS
@@ -785,7 +773,7 @@
 
         // Category elements
         const categoryNameInput = document.getElementById('categoryNameInput');
-        const colorPalette = document.getElementById('colorPalette');
+        const categoryColorSelect = document.getElementById('categoryColorSelect');
         const addCategoryBtn = document.getElementById('addCategoryBtn');
         const categoryList = document.getElementById('categoryList');
         const categorySelect = document.getElementById('categorySelect');
@@ -799,29 +787,17 @@
         const completedTasksEl = document.getElementById('completedTasks');
 
         // =====================================================
-        // INITIALIZE COLOR PALETTE
+        // INITIALIZE COLOR DROPDOWN
         // =====================================================
 
-        function initColorPalette() {
-            colorPalette.innerHTML = '';
+        function initColorDropdown() {
+            categoryColorSelect.innerHTML = '';
             COLOR_PALETTE.forEach(color => {
-                const box = document.createElement('div');
-                box.className = 'color-box';
-                box.style.backgroundColor = color.value;
-                box.title = color.name;
-                box.dataset.color = color.value;
-
-                if (color.value === selectedColor) {
-                    box.classList.add('selected');
-                }
-
-                box.addEventListener('click', () => {
-                    selectedColor = color.value;
-                    document.querySelectorAll('.color-box').forEach(b => b.classList.remove('selected'));
-                    box.classList.add('selected');
-                });
-
-                colorPalette.appendChild(box);
+                const option = document.createElement('option');
+                option.value = color.value;
+                option.textContent = color.name;
+                option.style.color = color.value;
+                categoryColorSelect.appendChild(option);
             });
         }
 
@@ -959,8 +935,7 @@
             renderCategories();
             updateCategorySelect();
             categoryNameInput.value = '';
-            selectedColor = COLOR_PALETTE[0].value;
-            initColorPalette();
+            categoryColorSelect.selectedIndex = 0;
             showSuccess('Category created!');
         }
 
@@ -987,6 +962,40 @@
             showSuccess('Category deleted!');
         }
 
+        async function updateCategoryColor(categoryId, newColor) {
+            const { error } = await supabase
+                .from('categories')
+                .update({ color: newColor })
+                .eq('id', categoryId);
+
+            if (error) {
+                console.error('Error updating category color:', error);
+                showAppError('Failed to update category color');
+                return false;
+            }
+
+            const category = categories.find(c => c.id === categoryId);
+            if (category) {
+                category.color = newColor;
+            }
+
+            editingCategoryId = null;
+            renderCategories();
+            await loadTasks();
+            showSuccess('Category color updated!');
+            return true;
+        }
+
+        function startEditingCategory(categoryId) {
+            editingCategoryId = categoryId;
+            renderCategories();
+        }
+
+        function cancelCategoryEdit() {
+            editingCategoryId = null;
+            renderCategories();
+        }
+
         function renderCategories() {
             categoryList.innerHTML = '';
 
@@ -996,14 +1005,37 @@
             }
 
             categories.forEach(category => {
-                const tag = document.createElement('div');
-                tag.className = 'category-tag';
-                tag.style.backgroundColor = category.color || '#667eea';
-                tag.innerHTML = `
-                    ${escapeHtml(category.name)}
-                    <button onclick="deleteCategory('${category.id}')" title="Delete category">&times;</button>
-                `;
-                categoryList.appendChild(tag);
+                if (category.id === editingCategoryId) {
+                    // Edit mode for category
+                    const editDiv = document.createElement('div');
+                    editDiv.style.cssText = 'background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 10px;';
+                    editDiv.innerHTML = `
+                        <div style="margin-bottom: 5px; font-weight: bold;">${escapeHtml(category.name)}</div>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <select id="edit-color-${category.id}" style="flex: 1; padding: 5px;">
+                                ${COLOR_PALETTE.map(c => `
+                                    <option value="${c.value}" ${c.value === category.color ? 'selected' : ''}>
+                                        ${c.name}
+                                    </option>
+                                `).join('')}
+                            </select>
+                            <button onclick="saveCategoryColor('${category.id}')" style="background: #4caf50; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Save</button>
+                            <button onclick="cancelCategoryEdit()" style="background: #999; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Cancel</button>
+                        </div>
+                    `;
+                    categoryList.appendChild(editDiv);
+                } else {
+                    // Normal view
+                    const tag = document.createElement('div');
+                    tag.className = 'category-tag';
+                    tag.style.backgroundColor = category.color || '#667eea';
+                    tag.innerHTML = `
+                        ${escapeHtml(category.name)}
+                        <button onclick="startEditingCategory('${category.id}')" title="Edit color">Edit</button>
+                        <button class="delete-category-btn" onclick="deleteCategory('${category.id}')" title="Delete category">&times;</button>
+                    `;
+                    categoryList.appendChild(tag);
+                }
             });
         }
 
@@ -1378,13 +1410,19 @@
         }
 
         async function loadAppData() {
-            initColorPalette();
+            initColorDropdown();
             await loadCategories();
             await loadTasks();
         }
 
         // Global functions for onclick handlers
         window.deleteCategory = deleteCategory;
+        window.startEditingCategory = startEditingCategory;
+        window.cancelCategoryEdit = cancelCategoryEdit;
+        window.saveCategoryColor = function(categoryId) {
+            const newColor = document.getElementById(`edit-color-${categoryId}`).value;
+            updateCategoryColor(categoryId, newColor);
+        };
         window.saveEdit = function(taskId) {
             const title = document.getElementById(`edit-title-${taskId}`).value;
             const categoryId = document.getElementById(`edit-category-${taskId}`).value;
@@ -1437,12 +1475,12 @@
 
         // Categories
         addCategoryBtn.addEventListener('click', () => {
-            createCategory(categoryNameInput.value, selectedColor);
+            createCategory(categoryNameInput.value, categoryColorSelect.value);
         });
 
         categoryNameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                createCategory(categoryNameInput.value, selectedColor);
+                createCategory(categoryNameInput.value, categoryColorSelect.value);
             }
         });
 
