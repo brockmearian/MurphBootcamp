@@ -171,8 +171,14 @@
 
         .category-input-container {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 10px;
+        }
+
+        .category-name-row {
+            display: flex;
+            gap: 10px;
         }
 
         .category-input-container input[type="text"] {
@@ -183,15 +189,34 @@
             font-size: 14px;
         }
 
-        .category-input-container input[type="color"] {
-            width: 50px;
-            height: 38px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            cursor: pointer;
+        /* Color Palette Grid */
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
         }
 
-        .category-input-container button {
+        .color-box {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-box:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .color-box.selected {
+            border-color: #333;
+            transform: scale(1.05);
+        }
+
+        .category-add-btn {
             padding: 8px 16px;
             background: #4caf50;
             color: white;
@@ -202,7 +227,7 @@
             transition: background 0.3s;
         }
 
-        .category-input-container button:hover {
+        .category-add-btn:hover {
             background: #45a049;
         }
 
@@ -271,7 +296,7 @@
             gap: 10px;
         }
 
-        #categorySelect, #dueDateInput {
+        #categorySelect, #dueDateTimeInput {
             padding: 10px;
             border: 2px solid #e0e0e0;
             border-radius: 5px;
@@ -283,7 +308,7 @@
             flex: 1;
         }
 
-        #dueDateInput {
+        #dueDateTimeInput {
             flex: 1;
         }
 
@@ -368,7 +393,7 @@
             color: white;
         }
 
-        .task-due-date {
+        .task-due-datetime {
             display: inline-block;
             padding: 2px 8px;
             background: #f0f0f0;
@@ -377,14 +402,18 @@
             color: #666;
         }
 
-        .task-due-date.overdue {
+        .task-due-datetime.overdue {
             background: #ffebee;
             color: #dc3545;
             font-weight: bold;
         }
 
-        .delete-btn {
-            background: #dc3545;
+        .task-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .edit-btn, .delete-btn {
             color: white;
             border: none;
             padding: 6px 12px;
@@ -394,8 +423,80 @@
             transition: background 0.3s;
         }
 
+        .edit-btn {
+            background: #ffc107;
+        }
+
+        .edit-btn:hover {
+            background: #ffb300;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+        }
+
         .delete-btn:hover {
             background: #c82333;
+        }
+
+        /* Edit Mode */
+        .task-item.editing {
+            background: #fff9e6;
+            border: 2px solid #ffc107;
+        }
+
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .edit-form input[type="text"] {
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .edit-form select,
+        .edit-form input[type="datetime-local"] {
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .save-btn, .cancel-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .save-btn {
+            background: #4caf50;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #45a049;
+        }
+
+        .cancel-btn {
+            background: #999;
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background: #888;
         }
 
         .empty-state {
@@ -503,6 +604,10 @@
             .auth-buttons {
                 flex-direction: column;
             }
+
+            .color-palette {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
     </style>
 </head>
@@ -571,9 +676,11 @@
             <div class="category-section">
                 <h3>Categories</h3>
                 <div class="category-input-container">
-                    <input type="text" id="categoryNameInput" placeholder="New category name" maxlength="50" />
-                    <input type="color" id="categoryColorInput" value="#667eea" />
-                    <button id="addCategoryBtn">Add</button>
+                    <div class="category-name-row">
+                        <input type="text" id="categoryNameInput" placeholder="New category name" maxlength="50" />
+                        <button class="category-add-btn" id="addCategoryBtn">Add</button>
+                    </div>
+                    <div class="color-palette" id="colorPalette"></div>
                 </div>
                 <div id="categoryList" class="category-list"></div>
             </div>
@@ -588,7 +695,7 @@
                     <select id="categorySelect">
                         <option value="">No category</option>
                     </select>
-                    <input type="date" id="dueDateInput" />
+                    <input type="datetime-local" id="dueDateTimeInput" />
                 </div>
             </div>
 
@@ -611,12 +718,29 @@
         // SUPABASE INITIALIZATION
         // =====================================================
 
-        // IMPORTANT: Replace these with your actual Supabase credentials
-        // For production, use environment variables
         const SUPABASE_URL = "https://ovyxgsqfgbffkdtejnui.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92eXhnc3FmZ2JmZmtkdGVqbnVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4ODkzNjYsImV4cCI6MjA3ODQ2NTM2Nn0.u7sF2FRocwwuwqwMnWqCfiS-yazKiZUhVsPvWUUmFP4";
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // =====================================================
+        // COLOR PALETTE
+        // =====================================================
+
+        const COLOR_PALETTE = [
+            { name: 'Red', value: '#ef5350' },
+            { name: 'Pink', value: '#ec407a' },
+            { name: 'Purple', value: '#ab47bc' },
+            { name: 'Deep Purple', value: '#7e57c2' },
+            { name: 'Indigo', value: '#5c6bc0' },
+            { name: 'Blue', value: '#42a5f5' },
+            { name: 'Light Blue', value: '#29b6f6' },
+            { name: 'Cyan', value: '#26c6da' },
+            { name: 'Teal', value: '#26a69a' },
+            { name: 'Green', value: '#66bb6a' },
+            { name: 'Orange', value: '#ffa726' },
+            { name: 'Gray', value: '#78909c' }
+        ];
 
         // =====================================================
         // GLOBAL STATE
@@ -625,6 +749,8 @@
         let currentUser = null;
         let tasks = [];
         let categories = [];
+        let selectedColor = COLOR_PALETTE[0].value;
+        let editingTaskId = null;
 
         // =====================================================
         // DOM ELEMENTS
@@ -659,18 +785,45 @@
 
         // Category elements
         const categoryNameInput = document.getElementById('categoryNameInput');
-        const categoryColorInput = document.getElementById('categoryColorInput');
+        const colorPalette = document.getElementById('colorPalette');
         const addCategoryBtn = document.getElementById('addCategoryBtn');
         const categoryList = document.getElementById('categoryList');
         const categorySelect = document.getElementById('categorySelect');
 
         // Task elements
         const taskInput = document.getElementById('taskInput');
-        const dueDateInput = document.getElementById('dueDateInput');
+        const dueDateTimeInput = document.getElementById('dueDateTimeInput');
         const addBtn = document.getElementById('addBtn');
         const taskList = document.getElementById('taskList');
         const totalTasksEl = document.getElementById('totalTasks');
         const completedTasksEl = document.getElementById('completedTasks');
+
+        // =====================================================
+        // INITIALIZE COLOR PALETTE
+        // =====================================================
+
+        function initColorPalette() {
+            colorPalette.innerHTML = '';
+            COLOR_PALETTE.forEach(color => {
+                const box = document.createElement('div');
+                box.className = 'color-box';
+                box.style.backgroundColor = color.value;
+                box.title = color.name;
+                box.dataset.color = color.value;
+
+                if (color.value === selectedColor) {
+                    box.classList.add('selected');
+                }
+
+                box.addEventListener('click', () => {
+                    selectedColor = color.value;
+                    document.querySelectorAll('.color-box').forEach(b => b.classList.remove('selected'));
+                    box.classList.add('selected');
+                });
+
+                colorPalette.appendChild(box);
+            });
+        }
 
         // =====================================================
         // AUTHENTICATION
@@ -725,7 +878,6 @@
                 showError(error.message);
             } else {
                 showError('Account created! Please check your email for confirmation.', 'success');
-                // Auto sign in if email confirmation is disabled
                 if (data.session) {
                     currentUser = data.user;
                     showApp();
@@ -747,7 +899,6 @@
             }
         }
 
-        // Listen for auth state changes
         supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN' && session) {
                 currentUser = session.user;
@@ -795,7 +946,7 @@
                 .select();
 
             if (error) {
-                if (error.code === '23505') { // Unique constraint violation
+                if (error.code === '23505') {
                     showAppError('Category with this name already exists');
                 } else {
                     console.error('Error creating category:', error);
@@ -808,6 +959,8 @@
             renderCategories();
             updateCategorySelect();
             categoryNameInput.value = '';
+            selectedColor = COLOR_PALETTE[0].value;
+            initColorPalette();
             showSuccess('Category created!');
         }
 
@@ -830,7 +983,6 @@
             categories = categories.filter(c => c.id !== categoryId);
             renderCategories();
             updateCategorySelect();
-            // Reload tasks to update their category display
             await loadTasks();
             showSuccess('Category deleted!');
         }
@@ -866,7 +1018,6 @@
                 categorySelect.appendChild(option);
             });
 
-            // Restore previous selection if it still exists
             if (currentValue && categories.find(c => c.id === currentValue)) {
                 categorySelect.value = currentValue;
             }
@@ -874,9 +1025,9 @@
 
         async function createDefaultCategories() {
             const defaults = [
-                { name: 'Personal', color: '#667eea' },
-                { name: 'Work', color: '#4caf50' },
-                { name: 'Shopping', color: '#ff9800' }
+                { name: 'Personal', color: '#42a5f5' },
+                { name: 'Work', color: '#66bb6a' },
+                { name: 'Shopping', color: '#ffa726' }
             ];
 
             for (const cat of defaults) {
@@ -907,7 +1058,7 @@
             renderTasks();
         }
 
-        async function createTask(title, dueDate = null, categoryId = null) {
+        async function createTask(title, dueDateTime = null, categoryId = null) {
             if (!title.trim()) {
                 showAppError('Task cannot be empty');
                 return;
@@ -917,7 +1068,7 @@
                 .from('tasks')
                 .insert([{
                     title: title.trim(),
-                    due_date: dueDate || null,
+                    due_datetime: dueDateTime || null,
                     category_id: categoryId || null,
                     completed: false,
                     user_id: currentUser.id
@@ -936,26 +1087,33 @@
             tasks.unshift(data[0]);
             renderTasks();
             taskInput.value = '';
-            dueDateInput.value = '';
+            dueDateTimeInput.value = '';
             categorySelect.value = '';
         }
 
-        async function toggleTaskCompletion(taskId, completed) {
+        async function updateTask(taskId, updates) {
             const { error } = await supabase
                 .from('tasks')
-                .update({ completed: completed })
+                .update(updates)
                 .eq('id', taskId);
 
             if (error) {
                 console.error('Error updating task:', error);
                 showAppError('Failed to update task');
-                return;
+                return false;
             }
 
-            const task = tasks.find(t => t.id === taskId);
-            if (task) {
-                task.completed = completed;
-                renderTasks();
+            return true;
+        }
+
+        async function toggleTaskCompletion(taskId, completed) {
+            const success = await updateTask(taskId, { completed });
+            if (success) {
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = completed;
+                    renderTasks();
+                }
             }
         }
 
@@ -975,41 +1133,96 @@
             renderTasks();
         }
 
+        async function saveTaskEdit(taskId, title, categoryId, dueDateTime) {
+            if (!title.trim()) {
+                showAppError('Task title cannot be empty');
+                return;
+            }
+
+            const success = await updateTask(taskId, {
+                title: title.trim(),
+                category_id: categoryId || null,
+                due_datetime: dueDateTime || null
+            });
+
+            if (success) {
+                editingTaskId = null;
+                await loadTasks();
+                showSuccess('Task updated!');
+            }
+        }
+
+        function cancelEdit() {
+            editingTaskId = null;
+            renderTasks();
+        }
+
         function renderTasks() {
             taskList.innerHTML = '';
 
             if (tasks.length === 0) {
                 taskList.innerHTML = '<div class="empty-state">No tasks yet. Add one above!</div>';
             } else {
-                const today = new Date().toISOString().split('T')[0];
+                const now = new Date();
 
                 tasks.forEach(task => {
                     const li = document.createElement('li');
                     li.className = `task-item ${task.completed ? 'completed' : ''}`;
 
+                    if (task.id === editingTaskId) {
+                        li.classList.add('editing');
+                    }
+
                     // Check if overdue
-                    const isOverdue = task.due_date && !task.completed && task.due_date < today;
+                    const isOverdue = task.due_datetime && !task.completed && new Date(task.due_datetime) < now;
                     if (isOverdue) {
                         li.classList.add('overdue');
                     }
 
-                    const categoryHtml = task.category ?
-                        `<span class="task-category" style="background-color: ${task.category.color}">${escapeHtml(task.category.name)}</span>` : '';
-
-                    const dueDateHtml = task.due_date ?
-                        `<span class="task-due-date ${isOverdue ? 'overdue' : ''}">Due: ${formatDate(task.due_date)}</span>` : '';
-
-                    li.innerHTML = `
-                        <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}">
-                        <div class="task-content">
-                            <div class="task-text">${escapeHtml(task.title)}</div>
-                            <div class="task-meta">
-                                ${categoryHtml}
-                                ${dueDateHtml}
+                    if (task.id === editingTaskId) {
+                        // Edit mode
+                        li.innerHTML = `
+                            <div class="edit-form">
+                                <input type="text" value="${escapeHtml(task.title)}" id="edit-title-${task.id}">
+                                <select id="edit-category-${task.id}">
+                                    <option value="">No category</option>
+                                    ${categories.map(cat => `
+                                        <option value="${cat.id}" ${task.category_id === cat.id ? 'selected' : ''}>
+                                            ${escapeHtml(cat.name)}
+                                        </option>
+                                    `).join('')}
+                                </select>
+                                <input type="datetime-local" id="edit-datetime-${task.id}"
+                                       value="${task.due_datetime ? formatDateTimeForInput(task.due_datetime) : ''}">
+                                <div class="edit-actions">
+                                    <button class="save-btn" onclick="saveEdit('${task.id}')">Save</button>
+                                    <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
+                                </div>
                             </div>
-                        </div>
-                        <button class="delete-btn" data-id="${task.id}">Delete</button>
-                    `;
+                        `;
+                    } else {
+                        // Normal view
+                        const categoryHtml = task.category ?
+                            `<span class="task-category" style="background-color: ${task.category.color}">${escapeHtml(task.category.name)}</span>` : '';
+
+                        const dueDateTimeHtml = task.due_datetime ?
+                            `<span class="task-due-datetime ${isOverdue ? 'overdue' : ''}">Due: ${formatDateTime(task.due_datetime)}</span>` : '';
+
+                        li.innerHTML = `
+                            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} data-id="${task.id}">
+                            <div class="task-content">
+                                <div class="task-text">${escapeHtml(task.title)}</div>
+                                <div class="task-meta">
+                                    ${categoryHtml}
+                                    ${dueDateTimeHtml}
+                                </div>
+                            </div>
+                            <div class="task-buttons">
+                                <button class="edit-btn" data-id="${task.id}">Edit</button>
+                                <button class="delete-btn" data-id="${task.id}">Delete</button>
+                            </div>
+                        `;
+                    }
 
                     taskList.appendChild(li);
                 });
@@ -1046,12 +1259,11 @@
 
             migrationBanner.style.display = 'none';
 
-            // Create "Imported" category
             let importedCategory = categories.find(c => c.name === 'Imported');
             if (!importedCategory) {
                 const { data, error } = await supabase
                     .from('categories')
-                    .insert([{ name: 'Imported', color: '#9e9e9e' }])
+                    .insert([{ name: 'Imported', color: '#9e9e9e', user_id: currentUser.id }])
                     .select();
 
                 if (data && data.length > 0) {
@@ -1061,7 +1273,6 @@
                 }
             }
 
-            // Migrate tasks
             const migratedTasks = tasksArray.map(task => ({
                 title: task.text,
                 completed: task.completed || false,
@@ -1079,9 +1290,7 @@
                 return;
             }
 
-            // Clear localStorage
             localStorage.removeItem('tasks');
-
             showSuccess(`Successfully imported ${tasksArray.length} tasks!`);
             await loadTasks();
         }
@@ -1096,19 +1305,35 @@
             return div.innerHTML;
         }
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const today = new Date();
+        function formatDateTime(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
+            const taskDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
-            if (dateString === today.toISOString().split('T')[0]) {
-                return 'Today';
-            } else if (dateString === tomorrow.toISOString().split('T')[0]) {
-                return 'Tomorrow';
+            let dateStr;
+            if (taskDate.getTime() === today.getTime()) {
+                dateStr = 'Today';
+            } else if (taskDate.getTime() === tomorrow.getTime()) {
+                dateStr = 'Tomorrow';
             } else {
-                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             }
+
+            const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            return `${dateStr} at ${timeStr}`;
+        }
+
+        function formatDateTimeForInput(dateTimeString) {
+            const date = new Date(dateTimeString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
         }
 
         function showError(message, type = 'error') {
@@ -1153,9 +1378,20 @@
         }
 
         async function loadAppData() {
+            initColorPalette();
             await loadCategories();
             await loadTasks();
         }
+
+        // Global functions for onclick handlers
+        window.deleteCategory = deleteCategory;
+        window.saveEdit = function(taskId) {
+            const title = document.getElementById(`edit-title-${taskId}`).value;
+            const categoryId = document.getElementById(`edit-category-${taskId}`).value;
+            const dueDateTime = document.getElementById(`edit-datetime-${taskId}`).value;
+            saveTaskEdit(taskId, title, categoryId, dueDateTime);
+        };
+        window.cancelEdit = cancelEdit;
 
         // =====================================================
         // EVENT LISTENERS
@@ -1201,23 +1437,23 @@
 
         // Categories
         addCategoryBtn.addEventListener('click', () => {
-            createCategory(categoryNameInput.value, categoryColorInput.value);
+            createCategory(categoryNameInput.value, selectedColor);
         });
 
         categoryNameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                createCategory(categoryNameInput.value, categoryColorInput.value);
+                createCategory(categoryNameInput.value, selectedColor);
             }
         });
 
         // Tasks
         addBtn.addEventListener('click', () => {
-            createTask(taskInput.value, dueDateInput.value, categorySelect.value);
+            createTask(taskInput.value, dueDateTimeInput.value, categorySelect.value);
         });
 
         taskInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                createTask(taskInput.value, dueDateInput.value, categorySelect.value);
+                createTask(taskInput.value, dueDateTimeInput.value, categorySelect.value);
             }
         });
 
@@ -1225,6 +1461,12 @@
             if (e.target.classList.contains('task-checkbox')) {
                 const taskId = e.target.dataset.id;
                 toggleTaskCompletion(taskId, e.target.checked);
+            }
+
+            if (e.target.classList.contains('edit-btn')) {
+                const taskId = e.target.dataset.id;
+                editingTaskId = taskId;
+                renderTasks();
             }
 
             if (e.target.classList.contains('delete-btn')) {
