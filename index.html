@@ -688,7 +688,7 @@
                         <option value="">No category</option>
                     </select>
                     <input type="date" id="dueDateInput" placeholder="Due date" />
-                    <input type="time" id="dueTimeInput" placeholder="Time (optional)" />
+                    <input type="time" id="dueTimeInput" placeholder="Time (optional)" step="300" />
                 </div>
             </div>
 
@@ -1314,7 +1314,7 @@
                                 </select>
                                 <div style="display: flex; gap: 5px;">
                                     <input type="date" id="edit-date-${task.id}" value="${dateValue}" style="flex: 1;">
-                                    <input type="time" id="edit-time-${task.id}" value="${timeValue}" placeholder="Time (optional)" style="flex: 0.7;">
+                                    <input type="time" id="edit-time-${task.id}" value="${timeValue}" placeholder="Time (optional)" step="300" style="flex: 0.7;">
                                 </div>
                                 <div class="edit-actions">
                                     <button class="save-btn" onclick="saveEdit('${task.id}')">Save</button>
