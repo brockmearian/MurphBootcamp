@@ -1096,12 +1096,16 @@
                 return;
             }
 
+            // Convert empty strings to null for proper database handling
+            const cleanDueDateTime = dueDateTime && dueDateTime.trim() !== '' ? dueDateTime : null;
+            const cleanCategoryId = categoryId && categoryId.trim() !== '' ? categoryId : null;
+
             const { data, error } = await supabase
                 .from('tasks')
                 .insert([{
                     title: title.trim(),
-                    due_datetime: dueDateTime || null,
-                    category_id: categoryId || null,
+                    due_datetime: cleanDueDateTime,
+                    category_id: cleanCategoryId,
                     completed: false,
                     user_id: currentUser.id
                 }])
@@ -1171,10 +1175,14 @@
                 return;
             }
 
+            // Convert empty strings to null for proper database handling
+            const cleanCategoryId = categoryId && categoryId.trim() !== '' ? categoryId : null;
+            const cleanDueDateTime = dueDateTime && dueDateTime.trim() !== '' ? dueDateTime : null;
+
             const success = await updateTask(taskId, {
                 title: title.trim(),
-                category_id: categoryId || null,
-                due_datetime: dueDateTime || null
+                category_id: cleanCategoryId,
+                due_datetime: cleanDueDateTime
             });
 
             if (success) {
